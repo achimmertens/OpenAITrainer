@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
+const csv = require('csv-parser');
 
 async function readCodeFile(filePath) {
     try {
@@ -12,14 +13,15 @@ async function readCodeFile(filePath) {
     }
 }
 
-async function readJouleFile(filePath) {
-    try {
-        const content = await fs.readFile(filePath, 'utf-8');
-        return content.split('\n').map(line => parseFloat(line.trim()));
-    } catch (error) {
-        console.error(`Fehler beim Lesen der Joule-Datei ${filePath}:`, error);
-        return [];
-    }
+function readJouleCSV(filePath) {
+    return new Promise((resolve, reject) => {
+        const results = [];
+        fsSync.createReadStream(filePath)
+            .pipe(csv())
+            .on('data', (data) => results.push(data))
+            .on('end', () => resolve(results))
+            .on('error', (error) => reject(error));
+    });
 }
 
 function createJSONLEntry(code, joule) {
@@ -35,38 +37,41 @@ function createJSONLEntry(code, joule) {
             },
             {
                 role: "assistant",
-                content: `Die Joule-Zahl beträgt: ${joule}`
+                content: `Der Energieverbrauch für dieses Stück Code beträgt: ${joule} Joule`
             }
         ]
     });
 }
 
 async function createJSONLFile(codeDir, jouleFile, outputFile) {
-    const joules = await readJouleFile(jouleFile);
-    console.log(`Gelesene Joule-Werte: ${joules.length}`);
+    const jouleData = await readJouleCSV(jouleFile);
+    console.log(`Gelesene Joule-Einträge: ${jouleData.length}`);
 
     const fileStream = fsSync.createWriteStream(outputFile);
 
     const codeFiles = await fs.readdir(codeDir);
     console.log(`Gefundene Code-Dateien: ${codeFiles.length}`);
 
-    for (let i = 0; i < codeFiles.length && i < joules.length; i++) {
-        const codeFile = codeFiles[i];
-        console.log(`Verarbeite Datei: ${codeFile}`);
-        const filePath = path.join(codeDir, codeFile);
-        console.log(`Vollständiger Dateipfad: ${filePath}`);
+    for (const jouleEntry of jouleData) {
+        const codeFileName = `${jouleEntry.Job_ID}.txt`;
+        const filePath = path.join(codeDir, codeFileName);
         
-        try {
-            const code = await readCodeFile(filePath);
-            if (code !== null) {
-                const jsonlEntry = createJSONLEntry(code, joules[i]);
-                fileStream.write(jsonlEntry + '\n');
-                console.log(`JSONL-Eintrag für ${codeFile} geschrieben. Joule-Wert: ${joules[i]}`);
-            } else {
-                console.log(`Datei ${codeFile} ist leer oder konnte nicht gelesen werden.`);
+        if (codeFiles.includes(codeFileName)) {
+            console.log(`Verarbeite Datei: ${codeFileName}`);
+            try {
+                const code = await readCodeFile(filePath);
+                if (code !== null) {
+                    const jsonlEntry = createJSONLEntry(code, jouleEntry.Joule);
+                    fileStream.write(jsonlEntry + '\n');
+                    console.log(`JSONL-Eintrag für ${codeFileName} geschrieben. Joule-Wert: ${jouleEntry.Joule}`);
+                } else {
+                    console.log(`Datei ${codeFileName} ist leer oder konnte nicht gelesen werden.`);
+                }
+            } catch (error) {
+                console.error(`Fehler beim Verarbeiten der Datei ${codeFileName}:`, error);
             }
-        } catch (error) {
-            console.error(`Fehler beim Verarbeiten der Datei ${codeFile}:`, error);
+        } else {
+            console.log(`Keine übereinstimmende Datei für Job-ID ${jouleEntry.Job_ID} gefunden.`);
         }
     }
 
@@ -75,9 +80,8 @@ async function createJSONLFile(codeDir, jouleFile, outputFile) {
 }
 
 const codeDirectory = './code_snippets';
-const jouleFile = './joule_values.txt';
+const jouleFile = './joule_values.csv';
 const outputFile = 'outputCodeJoules.jsonl';
 
 createJSONLFile(codeDirectory, jouleFile, outputFile)
     .catch(error => console.error('Fehler beim Erstellen der JSONL-Datei:', error));
-
