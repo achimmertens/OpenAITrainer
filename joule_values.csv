@@ -1,6 +1,10 @@
-Job_ID,Job_Name,Joule
-172956114,memory3.py,0.042
-189170818,hello_world.py,0.033
-189170819,find.py,0.018
-189170820,count.py,54.74
-189292737,hello_world.py,0.033
+Path,Job_ID,Job_Name,Joule,Seconds
+/vanya/playground/external/daniela-reinhardt-/jobs/,172956114,memory3.py,0.042,6
+/vanya/playground/external/achim/-/jobs/,189170818,hello_world.py,0.033,14
+/vanya/playground/external/achim/-/jobs/,189170819,find.py,0.018,14
+/vanya/playground/external/achim/-/jobs/,189170820,count.py,54.74,1198
+/vanya/playground/external/achim/-/jobs/,189292737,hello_world.py,0.033,14
+/vanya/playground/external/achim/-/jobs/,189292739,count.py,77.32,117
+/vanya/playground/external/achim/-/jobs/,189292740,sum.py,0.033,14
+/vanya/playground/external/achim/-/jobs/,189292738,find.py,0.012,14
+/vanya/playground/external/achim/-/jobs/,189292741,fibonacci,1442,2107
