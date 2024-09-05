@@ -44,6 +44,7 @@ function createJSONLEntry(code, joule) {
 }
 
 async function createJSONLFile(codeDir, jouleFile, outputFile) {
+    console.log('Starte Verarbeitung...');
     const jouleData = await readJouleCSV(jouleFile);
     console.log(`Gelesene Joule-Einträge: ${jouleData.length}`);
 
@@ -63,15 +64,15 @@ async function createJSONLFile(codeDir, jouleFile, outputFile) {
                 if (code !== null) {
                     const jsonlEntry = createJSONLEntry(code, jouleEntry.Joule);
                     fileStream.write(jsonlEntry + '\n');
-                    console.log(`JSONL-Eintrag für ${codeFileName} geschrieben. Joule-Wert: ${jouleEntry.Joule}`);
+                    console.log(`JSONL-Eintrag für ${codeFileName} (${jouleEntry.Job_Name}) geschrieben. Joule-Wert: ${jouleEntry.Joule}`);
                 } else {
-                    console.log(`Datei ${codeFileName} ist leer oder konnte nicht gelesen werden.`);
+                    console.log(`Datei ${codeFileName} (${jouleEntry.Job_Name}) ist leer oder konnte nicht gelesen werden.`);
                 }
             } catch (error) {
-                console.error(`Fehler beim Verarbeiten der Datei ${codeFileName}:`, error);
+                console.error(`Fehler beim Verarbeiten der Datei ${codeFileName} (${jouleEntry.Job_Name}):`, error);
             }
         } else {
-            console.log(`Keine übereinstimmende Datei für Job-ID ${jouleEntry.Job_ID} gefunden.`);
+            console.log(`Keine übereinstimmende Datei für Job-ID ${jouleEntry.Job_ID} (${jouleEntry.Job_Name}) gefunden.`);
         }
     }
 
@@ -83,5 +84,7 @@ const codeDirectory = './code_snippets';
 const jouleFile = './joule_values.csv';
 const outputFile = 'outputCodeJoules.jsonl';
 
+console.log('Skript gestartet');
 createJSONLFile(codeDirectory, jouleFile, outputFile)
+    .then(() => console.log('Skript erfolgreich beendet'))
     .catch(error => console.error('Fehler beim Erstellen der JSONL-Datei:', error));

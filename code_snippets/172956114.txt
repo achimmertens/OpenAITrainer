@@ -1,0 +1,60 @@
+import random
+
+def create_board(size):
+    alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    board = []
+    for i in range (size * size): 
+        alphabet_index = i // 2
+        board.append(alphabet[alphabet_index])
+    random.shuffle(board)
+    return board
+
+def print_board(board, revealed, size):
+    for i in range(size):
+        for j in range(size):
+            if revealed[i * size + j]:
+                print(board[i * size + j], end=' ')
+            else:
+                print('*', end=' ')
+        print()
+
+def check_win(revealed):
+    return all(revealed)
+
+def play_memory_game(size):
+    board = create_board(size)
+    revealed = [False] * (size * size)
+    moves = 0
+
+    while not check_win(revealed):
+        print_board(board, revealed, size)
+        try:
+            first_choice = int(input(f"Erste Karte auswählen (0-{size*size-1}): "))
+            second_choice = int(input(f"Zweite Karte auswählen (0-{size*size-1}): "))
+        except ValueError: 
+            print("Ungültige Eingabe. Bitte eine Zahl eingeben.")
+            continue
+        except EOFError:
+            print("Keine Eingabe erhalten (EOFError). Das Programm wird beendet.")
+            break
+
+        if first_choice == second_choice or first_choice < 0 or second_choice < 0 or first_choice >= size*size or second_choice >= size*size:
+            print("Ungültige Auswahl. Versuche es erneut.")
+            continue
+
+        revealed[first_choice] = True
+        revealed[second_choice] = True
+        print_board(board, revealed, size)
+
+        if board[first_choice] != board[second_choice]:
+            print("Kein Paar gefunden.")
+            revealed[first_choice] = False
+            revealed[second_choice] = False
+        else:
+            print("Paar gefunden!")
+
+        moves += 1
+
+    print(f"Herzlichen Glückwunsch! Du hast das Spiel in {moves} Zügen gewonnen!")
+
+play_memory_game(4)
