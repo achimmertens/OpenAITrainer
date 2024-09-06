@@ -65,24 +65,29 @@ async function createJSONLFile(codeDir, jouleFile, outputFile) {
         const filePath = path.join(codeDir, codeFileName);
         
         if (codeFiles.includes(codeFileName)) {
-            console.log(`Verarbeite Datei: ${codeFileName}`);
+            console.log(`Verarbeite Datei: ${codeFileName} (${jouleEntry.Job_Name})`);
             try {
                 const code = await readCodeFile(filePath);
                 if (code !== null) {
                     const jsonlEntry = createJSONLEntry(code, jouleEntry.Joule, jouleEntry.Seconds);
                     fileStream.write(jsonlEntry + '\n');
-                    console.log(`JSONL-Eintrag für ${codeFileName} (${jouleEntry.Job_Name}) geschrieben. Joule-Wert: ${jouleEntry.Joule}, Sekunden: ${jouleEntry.Seconds}`);
+                    console.log(`  Path: ${jouleEntry.Path}`);
+                    console.log(`  Joule-Wert: ${jouleEntry.Joule}`);
+                    console.log(`  Sekunden: ${jouleEntry.Seconds}`);
                     processedEntries++;
                 } else {
                     console.log(`Datei ${codeFileName} (${jouleEntry.Job_Name}) ist leer oder konnte nicht gelesen werden.`);
+                    console.log(`  Path: ${jouleEntry.Path}`);
                     missingFiles++;
                 }
             } catch (error) {
                 console.error(`Fehler beim Verarbeiten der Datei ${codeFileName} (${jouleEntry.Job_Name}):`, error);
+                console.log(`  Path: ${jouleEntry.Path}`);
                 missingFiles++;
             }
         } else {
             console.log(`Keine übereinstimmende Datei für Job-ID ${jouleEntry.Job_ID} (${jouleEntry.Job_Name}) gefunden.`);
+            console.log(`  Path: ${jouleEntry.Path}`);
             missingFiles++;
         }
     }
